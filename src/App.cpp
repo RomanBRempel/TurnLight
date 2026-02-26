@@ -30,12 +30,51 @@ namespace {
     return s;
   }
 
-  void renderStartupFadeToTail(CRGB* leds, uint32_t nowMs, uint32_t bootMs) {
-    const uint32_t elapsed = nowMs - bootMs;
-    const uint32_t duration = Config::STARTUP_EFFECT_MS;
-    const uint8_t mix = (duration == 0) ? 255 : static_cast<uint8_t>((elapsed * 255UL) / duration);
+  uint8_t ringBreathValue(uint32_t nowMs, uint32_t offsetMs) {
+    const uint32_t period = Config::STARTUP_BREATH_PERIOD_MS;
+    if (period == 0) {
+      return 0;
+    }
+    const uint32_t t = (nowMs + offsetMs) % period;
+    const uint8_t phase = static_cast<uint8_t>((t * 255UL) / period);
+    return sin8(phase);
+  }
 
-    const CRGB blue = CRGB(0, 0, 255);
+  void renderStartupBreathBlue(CRGB* leds, uint32_t nowMs) {
+    const uint32_t period = Config::STARTUP_BREATH_PERIOD_MS;
+    if (period == 0) {
+      return;
+    }
+
+    const uint32_t phase0 = (nowMs % period);
+    const uint32_t phase1 = (phase0 + (period / 3U)) % period;
+    const uint32_t phase2 = (phase0 + (period * 2U / 3U)) % period;
+
+    const uint8_t vLarge = sin8(static_cast<uint8_t>((phase0 * 255UL) / period));
+    const uint8_t vMid   = sin8(static_cast<uint8_t>((phase1 * 255UL) / period));
+    const uint8_t vSmall = sin8(static_cast<uint8_t>((phase2 * 255UL) / period));
+
+    const uint8_t range = Config::STARTUP_BREATH_MAX_BRIGHT - Config::STARTUP_BREATH_MIN_BRIGHT;
+    const uint8_t bLarge = Config::STARTUP_BREATH_MIN_BRIGHT + scale8(vLarge, range);
+    const uint8_t bMid   = Config::STARTUP_BREATH_MIN_BRIGHT + scale8(vMid, range);
+    const uint8_t bSmall = Config::STARTUP_BREATH_MIN_BRIGHT + scale8(vSmall, range);
+
+    for (uint16_t i = 0; i < LedLayout::RING_LARGE_COUNT; i++) {
+      leds[LedLayout::RING_LARGE_START + i] = CRGB(0, 0, bLarge);
+    }
+    for (uint16_t i = 0; i < LedLayout::RING_MID_COUNT; i++) {
+      leds[LedLayout::RING_MID_START + i] = CRGB(0, 0, bMid);
+    }
+    for (uint16_t i = 0; i < LedLayout::RING_SMALL_COUNT; i++) {
+      leds[LedLayout::RING_SMALL_START + i] = CRGB(0, 0, bSmall);
+    }
+  }
+
+  void renderStartupFadeToTail(CRGB* leds, uint32_t fadeElapsedMs) {
+    const uint32_t duration = Config::STARTUP_FADE_MS;
+    const uint8_t mix = (duration == 0) ? 255 : static_cast<uint8_t>((fadeElapsedMs * 255UL) / duration);
+
+    const CRGB blue = CRGB(0, 0, Config::STARTUP_BREATH_MAX_BRIGHT);
     const CRGB tailSmall = colorTail(Config::TAIL_SMALL_BRIGHT);
     const CRGB tailMid   = colorTail(Config::TAIL_MID_BRIGHT);
     const CRGB tailLarge = colorTail(Config::TAIL_LARGE_BRIGHT);
@@ -53,6 +92,10 @@ namespace {
     for (uint16_t i = 0; i < LedLayout::RING_SMALL_COUNT; i++) {
       leds[LedLayout::RING_SMALL_START + i] = smallColor;
     }
+  }
+
+  void renderStartupFlashWhite(CRGB* leds) {
+    fill_solid(leds, LedLayout::LED_COUNT, CRGB::White);
   }
 
   bool isTurnWaveSafeToEnd(uint32_t nowMs, uint8_t activeRings) {
@@ -84,9 +127,20 @@ void App::tick(uint32_t nowMs) {
       Serial.println("Waiting for command (type: help)");
     }
   }
-  if (nowMs - _bootMs < Config::STARTUP_EFFECT_MS) {
+  const uint32_t startupTotal = Config::STARTUP_BREATH_MS + Config::STARTUP_FLASH_MS + Config::STARTUP_FADE_MS;
+  if (nowMs - _bootMs < startupTotal) {
     _strip.clear();
-    renderStartupFadeToTail(_strip.leds(), nowMs, _bootMs);
+    const uint32_t elapsed = nowMs - _bootMs;
+    if (elapsed < Config::STARTUP_BREATH_MS) {
+      renderStartupBreathBlue(_strip.leds(), nowMs);
+    } else if (elapsed < (Config::STARTUP_BREATH_MS + Config::STARTUP_FLASH_MS)) {
+      renderStartupFlashWhite(_strip.leds());
+    } else {
+      renderStartupFadeToTail(
+        _strip.leds(),
+        elapsed - Config::STARTUP_BREATH_MS - Config::STARTUP_FLASH_MS
+      );
+    }
     _strip.show();
     return;
   }

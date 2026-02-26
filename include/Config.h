@@ -8,9 +8,12 @@ namespace Config {
   static constexpr uint8_t LED_BRIGHTNESS_TAIL = 160; // tail-only
 
   // ---------- Startup effect ----------
-  static constexpr uint16_t STARTUP_EFFECT_MS = 3000;
-  static constexpr uint16_t STARTUP_BREATH_PERIOD_MS = 1200;
+  static constexpr uint16_t STARTUP_BREATH_MS = 5000;
+  static constexpr uint16_t STARTUP_FLASH_MS = 1550;
+  static constexpr uint16_t STARTUP_FADE_MS = 2500;
+  static constexpr uint16_t STARTUP_BREATH_PERIOD_MS = 1700;
   static constexpr uint8_t STARTUP_BREATH_MAX_BRIGHT = 200;
+  static constexpr uint8_t STARTUP_BREATH_MIN_BRIGHT = 40;
 
   // ---------- Tail (габарит) brightness by ring ----------
   static constexpr uint8_t TAIL_SMALL_BRIGHT = 190;
@@ -24,7 +27,7 @@ namespace Config {
   static constexpr uint16_t TURN_RING_STEP_MS = 180;     // time per ring
   static constexpr uint16_t TURN_RING_CYCLE_PAUSE_MS = 220; // pause after large ring
   static constexpr uint8_t TURN_RING_BRIGHT = 220;
-  static constexpr uint16_t TURN_OFF_HOLD_MS = 180;      // require stable LOW
+  static constexpr uint16_t TURN_OFF_HOLD_MS = 500;      // require stable LOW
   static constexpr uint16_t TURN_RING_BOUNDARY_WINDOW_MS = 15; // safe stop window
 
   // Colors (RGB tuning)
