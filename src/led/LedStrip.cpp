@@ -16,3 +16,7 @@ void LedStrip::clear() {
 void LedStrip::show() {
   FastLED.show();
 }
+
+void LedStrip::setBrightness(uint8_t value) {
+  FastLED.setBrightness(value);
+}

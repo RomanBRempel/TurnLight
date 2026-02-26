@@ -3,44 +3,47 @@
 #include "LedLayout.h"
 #include "Config.h"
 #include "Types.h"
-#include "../utils/Timing.h"
 #include "AnimCommon.h"
 
-// Renders moving segment on mid ring only.
-// - segment position advances with TURN_STEP_MS
-// - whole effect blinks with TURN_BLINK_PERIOD_MS / DUTY
-inline void renderTurnMidRing(CRGB* leds, uint32_t nowMs) {
-  if (!inDutyWindow(nowMs, Config::TURN_BLINK_PERIOD_MS, Config::TURN_BLINK_DUTY)) {
-    // during OFF phase: do nothing (leave tail/brake underneath)
+// Renders wave by rings: small -> mid (or large), with pause each cycle.
+inline uint32_t turnWaveCycleMs(uint8_t activeRings) {
+  return (Config::TURN_RING_STEP_MS * activeRings) + Config::TURN_RING_CYCLE_PAUSE_MS;
+}
+
+inline void renderTurnRingsWave(CRGB* leds, uint32_t nowMs, uint8_t activeRings) {
+  const uint32_t step = Config::TURN_RING_STEP_MS;
+  if (step == 0) {
     return;
   }
 
-  const uint8_t count = LedLayout::RING_MID_COUNT;
-  const uint16_t base = LedLayout::RING_MID_START;
-
-  // step index
-  uint32_t step = (Config::TURN_STEP_MS == 0) ? 0 : (nowMs / Config::TURN_STEP_MS);
-  int pos = (int)(Config::TURN_START_INDEX_MID_RING + (step % count));
-
-  if (Config::TURN_DIRECTION == TurnDirection::CCW) {
-    pos = (int)(Config::TURN_START_INDEX_MID_RING - (int)(step % count));
+  if (activeRings < 1 || activeRings > 3) {
+    return;
   }
 
-  // normalize
-  while (pos < 0) pos += count;
-  pos %= count;
+  const uint32_t cycle = turnWaveCycleMs(activeRings);
+  if (cycle == 0) {
+    return;
+  }
 
-  // draw segment with a small brightness gradient tail
-  for (uint8_t k = 0; k < Config::TURN_SEGMENT_LEN; k++) {
-    int idx = pos + k;
-    idx %= count;
+  const uint32_t phase = nowMs % cycle;
+  if (phase >= (step * activeRings)) {
+    return; // pause region
+  }
 
-    // front brighter, tail dimmer
-    uint8_t v = 220;
-    if (Config::TURN_SEGMENT_LEN > 1) {
-      // simple linear falloff
-      v = (uint8_t)(220 - (k * (140 / (Config::TURN_SEGMENT_LEN - 1))));
+  const uint8_t ringIndex = static_cast<uint8_t>(phase / step); // 0..(activeRings-1)
+  const CRGB color = colorTurn(Config::TURN_RING_BRIGHT);
+
+  if (ringIndex == 0) {
+    for (uint16_t i = 0; i < LedLayout::RING_SMALL_COUNT; i++) {
+      leds[LedLayout::RING_SMALL_START + i] = color;
     }
-    leds[base + idx] = colorTurn(v);
+  } else if (ringIndex == 1) {
+    for (uint16_t i = 0; i < LedLayout::RING_MID_COUNT; i++) {
+      leds[LedLayout::RING_MID_START + i] = color;
+    }
+  } else {
+    for (uint16_t i = 0; i < LedLayout::RING_LARGE_COUNT; i++) {
+      leds[LedLayout::RING_LARGE_START + i] = color;
+    }
   }
 }

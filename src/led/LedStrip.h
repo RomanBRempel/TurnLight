@@ -8,6 +8,7 @@ public:
   void begin();
   void clear();
   void show();
+  void setBrightness(uint8_t value);
 
   CRGB* leds() { return _leds; }
   const CRGB* leds() const { return _leds; }

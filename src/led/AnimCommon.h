@@ -13,5 +13,9 @@ inline CRGB colorBrake(uint8_t bright) {
 }
 
 inline CRGB colorTurn(uint8_t bright) {
-  return CHSV(Config::TURN_ORANGE_HUE, 255, bright);
+  return CRGB(
+    scale8(Config::TURN_ORANGE_R, bright),
+    scale8(Config::TURN_ORANGE_G, bright),
+    scale8(Config::TURN_ORANGE_B, bright)
+  );
 }
