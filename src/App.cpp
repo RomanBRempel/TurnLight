@@ -160,9 +160,7 @@ void App::tick(uint32_t nowMs) {
     _turnLastHighMs = nowMs;
   } else if (_turnHoldActive) {
     if ((uint32_t)(nowMs - _turnLastHighMs) >= RuntimeConfig::get().turnOffHoldMs) {
-      const bool turnOnlyInputs = !in.brake;
-      const uint8_t activeRings = turnOnlyInputs ? 3 : 2;
-      if (isTurnWaveSafeToEnd(nowMs, activeRings)) {
+      if (isTurnWaveSafeToEnd(nowMs, 3)) {
         _turnHoldActive = false;
       }
     }
@@ -207,7 +205,7 @@ void App::tick(uint32_t nowMs) {
   const bool tailOnly = mode.tailEnabled && !mode.brakeEnabled && !mode.turnEnabled;
   _strip.setBrightness(tailOnly ? cfg.ledBrightnessTail : cfg.ledBrightnessMax);
   const bool turnOnly = mode.turnEnabled && !mode.brakeEnabled;
-  const uint8_t turnActiveRings = turnOnly ? 3 : 2;
+  const uint8_t turnActiveRings = 3;
   const uint8_t tailScale = turnOnly ? 128 : 255;
 
   CRGB* leds = _strip.leds();
