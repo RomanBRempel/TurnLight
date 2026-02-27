@@ -9,15 +9,17 @@ namespace Config {
 
   // ---------- Startup effect ----------
   static constexpr uint16_t STARTUP_BREATH_MS = 5000;
-  static constexpr uint16_t STARTUP_FLASH_MS = 1550;
-  static constexpr uint16_t STARTUP_FADE_MS = 2500;
+  static constexpr uint16_t STARTUP_FLASH_MS = 1500;
+  static constexpr uint16_t STARTUP_FADE_MS = 1750;
   static constexpr uint16_t STARTUP_BREATH_PERIOD_MS = 1700;
-  static constexpr uint8_t STARTUP_BREATH_MAX_BRIGHT = 200;
-  static constexpr uint8_t STARTUP_BREATH_MIN_BRIGHT = 40;
+  static constexpr uint8_t STARTUP_BREATH_MAX_BRIGHT = 140;
+  static constexpr uint8_t STARTUP_BREATH_MIN_BRIGHT = 30;
+  static constexpr uint8_t STARTUP_BREATH_BLUE_R = 12;
+  static constexpr uint8_t STARTUP_BREATH_BLUE_G = 20;
 
   // ---------- Tail (габарит) brightness by ring ----------
-  static constexpr uint8_t TAIL_SMALL_BRIGHT = 190;
-  static constexpr uint8_t TAIL_MID_BRIGHT   = 95;
+  static constexpr uint8_t TAIL_SMALL_BRIGHT = 75;
+  static constexpr uint8_t TAIL_MID_BRIGHT   = 50;
   static constexpr uint8_t TAIL_LARGE_BRIGHT = 75;
 
   // ---------- Brake (стоп) ----------
@@ -32,7 +34,7 @@ namespace Config {
 
   // Colors (RGB tuning)
   static constexpr uint8_t TURN_ORANGE_R = 255;
-  static constexpr uint8_t TURN_ORANGE_G = 90;
+  static constexpr uint8_t TURN_ORANGE_G = 60;
   static constexpr uint8_t TURN_ORANGE_B = 0;
 
   // ---------- Inputs filtering ----------

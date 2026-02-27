@@ -1,6 +1,6 @@
 #pragma once
 #include <FastLED.h>
-#include "Config.h"
+#include "RuntimeConfig.h"
 
 // Tail/brake are red; turn is orange.
 inline CRGB colorTail(uint8_t bright) {
@@ -13,9 +13,10 @@ inline CRGB colorBrake(uint8_t bright) {
 }
 
 inline CRGB colorTurn(uint8_t bright) {
+  const RuntimeConfig::Data& cfg = RuntimeConfig::get();
   return CRGB(
-    scale8(Config::TURN_ORANGE_R, bright),
-    scale8(Config::TURN_ORANGE_G, bright),
-    scale8(Config::TURN_ORANGE_B, bright)
+    scale8(cfg.turnOrangeR, bright),
+    scale8(cfg.turnOrangeG, bright),
+    scale8(cfg.turnOrangeB, bright)
   );
 }

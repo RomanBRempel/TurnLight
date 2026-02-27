@@ -5,6 +5,7 @@
 #include "led/AnimCommon.h"
 #include "LedLayout.h"
 #include "Config.h"
+#include "RuntimeConfig.h"
 #include <ctype.h>
 #include <string.h>
 
@@ -31,7 +32,7 @@ namespace {
   }
 
   uint8_t ringBreathValue(uint32_t nowMs, uint32_t offsetMs) {
-    const uint32_t period = Config::STARTUP_BREATH_PERIOD_MS;
+    const uint32_t period = RuntimeConfig::get().startupBreathPeriodMs;
     if (period == 0) {
       return 0;
     }
@@ -41,7 +42,8 @@ namespace {
   }
 
   void renderStartupBreathBlue(CRGB* leds, uint32_t nowMs) {
-    const uint32_t period = Config::STARTUP_BREATH_PERIOD_MS;
+    const RuntimeConfig::Data& cfg = RuntimeConfig::get();
+    const uint32_t period = cfg.startupBreathPeriodMs;
     if (period == 0) {
       return;
     }
@@ -54,34 +56,47 @@ namespace {
     const uint8_t vMid   = sin8(static_cast<uint8_t>((phase1 * 255UL) / period));
     const uint8_t vSmall = sin8(static_cast<uint8_t>((phase2 * 255UL) / period));
 
-    const uint8_t range = Config::STARTUP_BREATH_MAX_BRIGHT - Config::STARTUP_BREATH_MIN_BRIGHT;
-    const uint8_t bLarge = Config::STARTUP_BREATH_MIN_BRIGHT + scale8(vLarge, range);
-    const uint8_t bMid   = Config::STARTUP_BREATH_MIN_BRIGHT + scale8(vMid, range);
-    const uint8_t bSmall = Config::STARTUP_BREATH_MIN_BRIGHT + scale8(vSmall, range);
+    const uint8_t range = cfg.startupBreathMaxBright - cfg.startupBreathMinBright;
+    const uint8_t bLarge = cfg.startupBreathMinBright + scale8(vLarge, range);
+    const uint8_t bMid   = cfg.startupBreathMinBright + scale8(vMid, range);
+    const uint8_t bSmall = cfg.startupBreathMinBright + scale8(vSmall, range);
 
     for (uint16_t i = 0; i < LedLayout::RING_LARGE_COUNT; i++) {
-      leds[LedLayout::RING_LARGE_START + i] = CRGB(0, 0, bLarge);
+      leds[LedLayout::RING_LARGE_START + i] = CRGB(
+        scale8(cfg.startupBreathBlueR, bLarge),
+        scale8(cfg.startupBreathBlueG, bLarge),
+        bLarge
+      );
     }
     for (uint16_t i = 0; i < LedLayout::RING_MID_COUNT; i++) {
-      leds[LedLayout::RING_MID_START + i] = CRGB(0, 0, bMid);
+      leds[LedLayout::RING_MID_START + i] = CRGB(
+        scale8(cfg.startupBreathBlueR, bMid),
+        scale8(cfg.startupBreathBlueG, bMid),
+        bMid
+      );
     }
     for (uint16_t i = 0; i < LedLayout::RING_SMALL_COUNT; i++) {
-      leds[LedLayout::RING_SMALL_START + i] = CRGB(0, 0, bSmall);
+      leds[LedLayout::RING_SMALL_START + i] = CRGB(
+        scale8(cfg.startupBreathBlueR, bSmall),
+        scale8(cfg.startupBreathBlueG, bSmall),
+        bSmall
+      );
     }
   }
 
   void renderStartupFadeToTail(CRGB* leds, uint32_t fadeElapsedMs) {
-    const uint32_t duration = Config::STARTUP_FADE_MS;
+    const uint32_t duration = RuntimeConfig::get().startupFadeMs;
     const uint8_t mix = (duration == 0) ? 255 : static_cast<uint8_t>((fadeElapsedMs * 255UL) / duration);
 
-    const CRGB blue = CRGB(0, 0, Config::STARTUP_BREATH_MAX_BRIGHT);
-    const CRGB tailSmall = colorTail(Config::TAIL_SMALL_BRIGHT);
-    const CRGB tailMid   = colorTail(Config::TAIL_MID_BRIGHT);
-    const CRGB tailLarge = colorTail(Config::TAIL_LARGE_BRIGHT);
+    const CRGB white = CRGB::White;
+    const RuntimeConfig::Data& cfg = RuntimeConfig::get();
+    const CRGB tailSmall = colorTail(cfg.tailSmallBright);
+    const CRGB tailMid   = colorTail(cfg.tailMidBright);
+    const CRGB tailLarge = colorTail(cfg.tailLargeBright);
 
-    const CRGB smallColor = blend(blue, tailSmall, mix);
-    const CRGB midColor   = blend(blue, tailMid, mix);
-    const CRGB largeColor = blend(blue, tailLarge, mix);
+    const CRGB smallColor = blend(white, tailSmall, mix);
+    const CRGB midColor   = blend(white, tailMid, mix);
+    const CRGB largeColor = blend(white, tailLarge, mix);
 
     for (uint16_t i = 0; i < LedLayout::RING_LARGE_COUNT; i++) {
       leds[LedLayout::RING_LARGE_START + i] = largeColor;
@@ -104,7 +119,7 @@ namespace {
       return true;
     }
     const uint32_t phase = nowMs % cycle;
-    const uint32_t step = Config::TURN_RING_STEP_MS;
+    const uint32_t step = RuntimeConfig::get().turnRingStepMs;
     if (phase >= (step * activeRings)) {
       return true;
     }
@@ -114,45 +129,37 @@ namespace {
 
 void App::begin() {
   _inputs.begin();
+  RuntimeConfig::load();
   _strip.begin();
   _bootMs = millis();
   _lastStatusMs = _bootMs;
+  _wifiPortal.begin();
+  _wifiPortal.setCommandHandler([this](const String& cmd) { handleCommand(cmd); });
   Serial.println("Ready. Waiting for command (type: help)");
 }
 
 void App::tick(uint32_t nowMs) {
-  if (nowMs - _bootMs < 10000U) {
-    if ((uint32_t)(nowMs - _lastStatusMs) >= 2000U) {
-      _lastStatusMs = nowMs;
-      Serial.println("Waiting for command (type: help)");
-    }
-  }
-  const uint32_t startupTotal = Config::STARTUP_BREATH_MS + Config::STARTUP_FLASH_MS + Config::STARTUP_FADE_MS;
-  if (nowMs - _bootMs < startupTotal) {
-    _strip.clear();
-    const uint32_t elapsed = nowMs - _bootMs;
-    if (elapsed < Config::STARTUP_BREATH_MS) {
-      renderStartupBreathBlue(_strip.leds(), nowMs);
-    } else if (elapsed < (Config::STARTUP_BREATH_MS + Config::STARTUP_FLASH_MS)) {
-      renderStartupFlashWhite(_strip.leds());
-    } else {
-      renderStartupFadeToTail(
-        _strip.leds(),
-        elapsed - Config::STARTUP_BREATH_MS - Config::STARTUP_FLASH_MS
-      );
-    }
-    _strip.show();
-    return;
-  }
-
   handleSerial();
   const Inputs in = _inputs.read(nowMs);
+  _lastInputsRaw = in;
+
+  if (in.turn && !_turnHighActive) {
+    _turnHighActive = true;
+    _turnHighStartMs = nowMs;
+  }
+  if (!in.turn && _turnHighActive) {
+    _turnHighActive = false;
+    _turnHighLastMs = nowMs - _turnHighStartMs;
+    _turnHighTotalMs += _turnHighLastMs;
+    _turnHighCount++;
+    _turnHighAvgMs = _turnHighTotalMs / _turnHighCount;
+  }
 
   if (in.turn) {
     _turnHoldActive = true;
     _turnLastHighMs = nowMs;
   } else if (_turnHoldActive) {
-    if ((uint32_t)(nowMs - _turnLastHighMs) >= Config::TURN_OFF_HOLD_MS) {
+    if ((uint32_t)(nowMs - _turnLastHighMs) >= RuntimeConfig::get().turnOffHoldMs) {
       const bool turnOnlyInputs = !in.brake;
       const uint8_t activeRings = turnOnlyInputs ? 3 : 2;
       if (isTurnWaveSafeToEnd(nowMs, activeRings)) {
@@ -163,6 +170,34 @@ void App::tick(uint32_t nowMs) {
 
   Inputs stableIn = in;
   stableIn.turn = _turnHoldActive;
+  _lastInputsStable = stableIn;
+
+  _wifiPortal.tick(nowMs, _lastInputsRaw, _lastInputsStable, _turnHighLastMs, _turnHighAvgMs, _turnHighCount);
+
+  if (nowMs - _bootMs < 10000U) {
+    if ((uint32_t)(nowMs - _lastStatusMs) >= 2000U) {
+      _lastStatusMs = nowMs;
+      Serial.println("Waiting for command (type: help)");
+    }
+  }
+  const RuntimeConfig::Data& cfg = RuntimeConfig::get();
+  const uint32_t startupTotal = cfg.startupBreathMs + cfg.startupFlashMs + cfg.startupFadeMs;
+  if (nowMs - _bootMs < startupTotal) {
+    _strip.clear();
+    const uint32_t elapsed = nowMs - _bootMs;
+    if (elapsed < cfg.startupBreathMs) {
+      renderStartupBreathBlue(_strip.leds(), nowMs);
+    } else if (elapsed < (cfg.startupBreathMs + cfg.startupFlashMs)) {
+      renderStartupFlashWhite(_strip.leds());
+    } else {
+      renderStartupFadeToTail(
+        _strip.leds(),
+        elapsed - cfg.startupBreathMs - cfg.startupFlashMs
+      );
+    }
+    _strip.show();
+    return;
+  }
 
   ResolvedMode mode = _resolver.resolve(stableIn);
   if (_overrideActive) {
@@ -170,7 +205,7 @@ void App::tick(uint32_t nowMs) {
   }
 
   const bool tailOnly = mode.tailEnabled && !mode.brakeEnabled && !mode.turnEnabled;
-  _strip.setBrightness(tailOnly ? Config::LED_BRIGHTNESS_TAIL : Config::LED_BRIGHTNESS_MAX);
+  _strip.setBrightness(tailOnly ? cfg.ledBrightnessTail : cfg.ledBrightnessMax);
   const bool turnOnly = mode.turnEnabled && !mode.brakeEnabled;
   const uint8_t turnActiveRings = turnOnly ? 3 : 2;
   const uint8_t tailScale = turnOnly ? 128 : 255;
@@ -277,4 +312,15 @@ void App::processCommand(char* line) {
   }
 
   _overrideMode = m;
+}
+
+void App::handleCommand(const String& command) {
+  char buffer[32];
+  const size_t n = command.length();
+  if (n >= sizeof(buffer)) {
+    return;
+  }
+  memcpy(buffer, command.c_str(), n);
+  buffer[n] = '\0';
+  processCommand(buffer);
 }

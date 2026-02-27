@@ -1,10 +1,10 @@
 #include "LedStrip.h"
 #include "Pins.h"
-#include "Config.h"
+#include "RuntimeConfig.h"
 
 void LedStrip::begin() {
   FastLED.addLeds<WS2812, Pins::LED_DATA, GRB>(_leds, LedLayout::LED_COUNT);
-  FastLED.setBrightness(Config::LED_BRIGHTNESS_MAX);
+  FastLED.setBrightness(RuntimeConfig::get().ledBrightnessMax);
   clear();
   show();
 }
