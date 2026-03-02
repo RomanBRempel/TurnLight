@@ -64,3 +64,40 @@ inline void renderTurnRingsWave(CRGB* leds, uint32_t nowMs, uint8_t activeRings)
     }
   }
 }
+
+inline void renderBrakeTurnLargeYellowPulse(CRGB* leds, uint32_t nowMs) {
+  const RuntimeConfig::Data& cfg = RuntimeConfig::get();
+
+  for (uint16_t i = 0; i < LedLayout::RING_SMALL_COUNT; i++) {
+    leds[LedLayout::RING_SMALL_START + i] = colorBrake(cfg.brakeBright);
+  }
+  for (uint16_t i = 0; i < LedLayout::RING_MID_COUNT; i++) {
+    leds[LedLayout::RING_MID_START + i] = colorBrake(cfg.brakeBright);
+  }
+
+  const uint32_t step = cfg.turnRingStepMs;
+  const uint32_t pause = cfg.turnRingCyclePauseMs;
+  const uint32_t cycle = (step * 2U) + pause;
+
+  uint8_t pulse = 0;
+  if (step > 0 && cycle > 0) {
+    const uint32_t phase = nowMs % cycle;
+    if (phase < step) {
+      pulse = static_cast<uint8_t>((phase * 255UL) / step);
+    } else if (phase < (step * 2U)) {
+      const uint32_t down = phase - step;
+      pulse = static_cast<uint8_t>(255UL - ((down * 255UL) / step));
+    }
+  }
+
+  const uint8_t bright = scale8(cfg.turnRingBright, pulse);
+  const CRGB yellow(
+    bright,
+    bright,
+    0
+  );
+
+  for (uint16_t i = 0; i < LedLayout::RING_LARGE_COUNT; i++) {
+    leds[LedLayout::RING_LARGE_START + i] = yellow;
+  }
+}

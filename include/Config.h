@@ -37,6 +37,9 @@ namespace Config {
   static constexpr uint8_t TURN_ORANGE_G = 60;
   static constexpr uint8_t TURN_ORANGE_B = 0;
 
+  // 0: classic brake+turn overlay, 1: small+mid red + large yellow pulse
+  static constexpr uint8_t BRAKE_TURN_STYLE = 0;
+
   // ---------- Inputs filtering ----------
   static constexpr uint16_t INPUT_DEBOUNCE_MS = 30;
 }

@@ -33,6 +33,7 @@ namespace RuntimeConfig {
     d.turnOrangeR = Config::TURN_ORANGE_R;
     d.turnOrangeG = Config::TURN_ORANGE_G;
     d.turnOrangeB = Config::TURN_ORANGE_B;
+    d.brakeTurnStyle = Config::BRAKE_TURN_STYLE;
 
     return d;
   }
@@ -73,6 +74,7 @@ namespace RuntimeConfig {
     data.turnOrangeR = prefs.getUChar("tor", data.turnOrangeR);
     data.turnOrangeG = prefs.getUChar("tog", data.turnOrangeG);
     data.turnOrangeB = prefs.getUChar("tob", data.turnOrangeB);
+    data.brakeTurnStyle = prefs.getUChar("bts", data.brakeTurnStyle);
 
     prefs.end();
   }
@@ -108,6 +110,7 @@ namespace RuntimeConfig {
     prefs.putUChar("tor", data.turnOrangeR);
     prefs.putUChar("tog", data.turnOrangeG);
     prefs.putUChar("tob", data.turnOrangeB);
+    prefs.putUChar("bts", data.brakeTurnStyle);
 
     prefs.end();
   }

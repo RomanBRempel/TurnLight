@@ -32,7 +32,8 @@ namespace {
     json += "\"turnOffHoldMs\":" + String(cfg.turnOffHoldMs) + ",";
     json += "\"turnOrangeR\":" + String(cfg.turnOrangeR) + ",";
     json += "\"turnOrangeG\":" + String(cfg.turnOrangeG) + ",";
-    json += "\"turnOrangeB\":" + String(cfg.turnOrangeB);
+    json += "\"turnOrangeB\":" + String(cfg.turnOrangeB) + ",";
+    json += "\"brakeTurnStyle\":" + String(cfg.brakeTurnStyle);
     json += "}";
     return json;
   }
@@ -144,7 +145,14 @@ void WifiPortal::setupServer() {
     html += "const c=await fetch('/config').then(r=>r.json());\n";
     html += "const keys=Object.keys(c);\n";
     html += "let f='';\n";
-    html += "for(const k of keys){f+=`<div>${k}: <input name='${k}' value='${c[k]}'></div>`;}\n";
+    html += "for(const k of keys){\n";
+    html += "if(k==='brakeTurnStyle'){\n";
+    html += "const v=Number(c[k]);\n";
+    html += "f+=`<div>${k}: <select name='${k}'><option value='0' ${v===0?'selected':''}>0 - classic</option><option value='1' ${v===1?'selected':''}>1 - small+mid red, large yellow pulse</option></select></div>`;\n";
+    html += "}else{\n";
+    html += "f+=`<div>${k}: <input name='${k}' value='${c[k]}'></div>`;\n";
+    html += "}\n";
+    html += "}\n";
     html += "document.getElementById('cfg').innerHTML=f;\n";
     html += "}\n";
     html += "async function saveCfg(){\n";
@@ -202,6 +210,7 @@ void WifiPortal::setupServer() {
     applyArg(_server, "turnOrangeR", cfg.turnOrangeR);
     applyArg(_server, "turnOrangeG", cfg.turnOrangeG);
     applyArg(_server, "turnOrangeB", cfg.turnOrangeB);
+    applyArg(_server, "brakeTurnStyle", cfg.brakeTurnStyle);
 
     _server.send(200, "application/json", "{\"ok\":true}");
   });

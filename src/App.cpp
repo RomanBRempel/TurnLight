@@ -10,6 +10,20 @@
 #include <string.h>
 
 namespace {
+  constexpr uint16_t OUTPUT_COLOR_SMOOTH_MS = 140;
+  constexpr uint16_t OUTPUT_BRIGHTNESS_SMOOTH_MS = 200;
+
+  uint8_t smoothingMix(uint32_t dtMs, uint16_t smoothMs) {
+    if (smoothMs == 0) {
+      return 255;
+    }
+    if (dtMs >= smoothMs) {
+      return 255;
+    }
+    const uint8_t mix = static_cast<uint8_t>((dtMs * 255UL) / smoothMs);
+    return (mix == 0) ? 1 : mix;
+  }
+
   void toLowerInPlace(char* s) {
     for (; *s; ++s) {
       *s = static_cast<char>(tolower(static_cast<unsigned char>(*s)));
@@ -131,6 +145,8 @@ void App::begin() {
   _inputs.begin();
   RuntimeConfig::load();
   _strip.begin();
+  _smoothedBrightness = RuntimeConfig::get().ledBrightnessMax;
+  _outputSmoothingLastMs = millis();
   _bootMs = millis();
   _lastStatusMs = _bootMs;
   _wifiPortal.begin();
@@ -203,8 +219,10 @@ void App::tick(uint32_t nowMs) {
   }
 
   const bool tailOnly = mode.tailEnabled && !mode.brakeEnabled && !mode.turnEnabled;
-  _strip.setBrightness(tailOnly ? cfg.ledBrightnessTail : cfg.ledBrightnessMax);
+  const uint8_t targetBrightness = tailOnly ? cfg.ledBrightnessTail : cfg.ledBrightnessMax;
   const bool turnOnly = mode.turnEnabled && !mode.brakeEnabled;
+  const bool brakeTurnTogether = mode.turnEnabled && mode.brakeEnabled;
+  const bool brakeTurnYellowLargeMode = brakeTurnTogether && (cfg.brakeTurnStyle == 1);
   const uint8_t turnActiveRings = 3;
   const uint8_t tailScale = turnOnly ? 128 : 255;
 
@@ -215,17 +233,49 @@ void App::tick(uint32_t nowMs) {
     renderTail(leds, tailScale);
   }
 
-  // Brake layer: small+large overwrite
-  if (mode.brakeEnabled) {
+  // Brake layer: overwrite rings
+  if (mode.brakeEnabled && !brakeTurnYellowLargeMode) {
     renderBrakeSmallAndLarge(leds);
   }
 
-  // Turn layer: mid ring overwrite (with blink envelope)
-  if (mode.turnEnabled) {
+  // Turn layer
+  if (brakeTurnYellowLargeMode) {
+    renderBrakeTurnLargeYellowPulse(leds, nowMs);
+  } else if (mode.turnEnabled) {
     renderTurnRingsWave(leds, nowMs, turnActiveRings);
   }
 
+  applyOutputSmoothing(nowMs, targetBrightness);
+
   _strip.show();
+}
+
+void App::applyOutputSmoothing(uint32_t nowMs, uint8_t targetBrightness) {
+  CRGB* leds = _strip.leds();
+
+  if (!_outputSmoothingInit) {
+    for (uint16_t i = 0; i < LedLayout::LED_COUNT; i++) {
+      _smoothedFrame[i] = leds[i];
+    }
+    _smoothedBrightness = targetBrightness;
+    _outputSmoothingLastMs = nowMs;
+    _outputSmoothingInit = true;
+    _strip.setBrightness(targetBrightness);
+    return;
+  }
+
+  const uint32_t dtMs = nowMs - _outputSmoothingLastMs;
+  _outputSmoothingLastMs = nowMs;
+
+  const uint8_t colorMix = smoothingMix(dtMs, OUTPUT_COLOR_SMOOTH_MS);
+  for (uint16_t i = 0; i < LedLayout::LED_COUNT; i++) {
+    _smoothedFrame[i] = blend(_smoothedFrame[i], leds[i], colorMix);
+    leds[i] = _smoothedFrame[i];
+  }
+
+  const uint8_t brightnessMix = smoothingMix(dtMs, OUTPUT_BRIGHTNESS_SMOOTH_MS);
+  _smoothedBrightness = lerp8by8(_smoothedBrightness, targetBrightness, brightnessMix);
+  _strip.setBrightness(_smoothedBrightness);
 }
 
 void App::handleSerial() {

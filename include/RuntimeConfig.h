@@ -30,6 +30,8 @@ namespace RuntimeConfig {
     uint8_t turnOrangeR;
     uint8_t turnOrangeG;
     uint8_t turnOrangeB;
+
+    uint8_t brakeTurnStyle;
   };
 
   Data defaults();

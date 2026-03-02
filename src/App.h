@@ -16,6 +16,7 @@ public:
 private:
   void handleSerial();
   void processCommand(char* line);
+  void applyOutputSmoothing(uint32_t nowMs, uint8_t targetBrightness);
 
   InputManager _inputs;
   ModeResolver _resolver;
@@ -36,4 +37,8 @@ private:
   uint32_t _turnHighTotalMs = 0;
   uint32_t _turnHighCount = 0;
   uint32_t _turnHighAvgMs = 0;
+  bool _outputSmoothingInit = false;
+  uint32_t _outputSmoothingLastMs = 0;
+  uint8_t _smoothedBrightness = 0;
+  CRGB _smoothedFrame[LedLayout::LED_COUNT];
 };
