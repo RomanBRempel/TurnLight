@@ -34,6 +34,11 @@ namespace RuntimeConfig {
     d.turnOrangeG = Config::TURN_ORANGE_G;
     d.turnOrangeB = Config::TURN_ORANGE_B;
 
+    d.turnBrakeAnimMode = Config::TURN_BRAKE_ANIM_MODE;
+    d.turnOnlyTailScale = Config::TURN_ONLY_TAIL_SCALE;
+    d.turnBrakeCombinedRedBright = Config::TURN_BRAKE_COMBINED_RED_BRIGHT;
+    d.turnBrakeFlickerPeriodMs = Config::TURN_BRAKE_FLICKER_PERIOD_MS;
+
     return d;
   }
 
@@ -74,6 +79,11 @@ namespace RuntimeConfig {
     data.turnOrangeG = prefs.getUChar("tog", data.turnOrangeG);
     data.turnOrangeB = prefs.getUChar("tob", data.turnOrangeB);
 
+    data.turnBrakeAnimMode = prefs.getUChar("tbamode", data.turnBrakeAnimMode);
+    data.turnOnlyTailScale = prefs.getUChar("totscale", data.turnOnlyTailScale);
+    data.turnBrakeCombinedRedBright = prefs.getUChar("tbcrb", data.turnBrakeCombinedRedBright);
+    data.turnBrakeFlickerPeriodMs = prefs.getUShort("tbfpm", data.turnBrakeFlickerPeriodMs);
+
     prefs.end();
   }
 
@@ -108,6 +118,11 @@ namespace RuntimeConfig {
     prefs.putUChar("tor", data.turnOrangeR);
     prefs.putUChar("tog", data.turnOrangeG);
     prefs.putUChar("tob", data.turnOrangeB);
+
+    prefs.putUChar("tbamode", data.turnBrakeAnimMode);
+    prefs.putUChar("totscale", data.turnOnlyTailScale);
+    prefs.putUChar("tbcrb", data.turnBrakeCombinedRedBright);
+    prefs.putUShort("tbfpm", data.turnBrakeFlickerPeriodMs);
 
     prefs.end();
   }

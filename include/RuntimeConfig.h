@@ -30,6 +30,11 @@ namespace RuntimeConfig {
     uint8_t turnOrangeR;
     uint8_t turnOrangeG;
     uint8_t turnOrangeB;
+
+    uint8_t turnBrakeAnimMode;           // 0=wave (current), 1=static small/mid + flicker large
+    uint8_t turnOnlyTailScale;           // scale for tail (red) when in turn-only mode
+    uint8_t turnBrakeCombinedRedBright;  // red brightness in combined turn+brake mode
+    uint16_t turnBrakeFlickerPeriodMs;   // flicker period for large ring in mode 1
   };
 
   Data defaults();

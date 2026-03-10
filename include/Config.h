@@ -37,6 +37,12 @@ namespace Config {
   static constexpr uint8_t TURN_ORANGE_G = 60;
   static constexpr uint8_t TURN_ORANGE_B = 0;
 
+  // ---------- Turn+Brake combined animation mode ----------
+  static constexpr uint8_t TURN_BRAKE_ANIM_MODE = 0;          // 0=wave (current), 1=static+flicker
+  static constexpr uint8_t TURN_ONLY_TAIL_SCALE = 128;        // tail scale in turn-only mode
+  static constexpr uint8_t TURN_BRAKE_COMBINED_RED_BRIGHT = 255; // red brightness in combined mode
+  static constexpr uint16_t TURN_BRAKE_FLICKER_PERIOD_MS = 600;  // large ring flicker period (mode 1)
+
   // ---------- Inputs filtering ----------
   static constexpr uint16_t INPUT_DEBOUNCE_MS = 30;
 }
