@@ -25,12 +25,11 @@ namespace Config {
   // ---------- Brake (стоп) ----------
   static constexpr uint8_t BRAKE_BRIGHT = 255;
 
-  // ---------- Turn (поворот) ----------
-  static constexpr uint16_t TURN_RING_STEP_MS = 180;     // time per ring
-  static constexpr uint16_t TURN_RING_CYCLE_PAUSE_MS = 220; // pause after large ring
+  // ---------- Turn (поворот) — pulse all rings ----------
+  static constexpr uint16_t TURN_PULSE_ON_MS = 400;      // ON phase duration (ms)
+  static constexpr uint16_t TURN_PULSE_OFF_MS = 400;     // OFF phase duration (ms)
   static constexpr uint8_t TURN_RING_BRIGHT = 220;
   static constexpr uint16_t TURN_OFF_HOLD_MS = 500;      // require stable LOW
-  static constexpr uint16_t TURN_RING_BOUNDARY_WINDOW_MS = 15; // safe stop window
 
   // Colors (RGB tuning)
   static constexpr uint8_t TURN_ORANGE_R = 255;

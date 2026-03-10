@@ -112,19 +112,6 @@ namespace {
   void renderStartupFlashWhite(CRGB* leds) {
     fill_solid(leds, LedLayout::LED_COUNT, CRGB::White);
   }
-
-  bool isTurnWaveSafeToEnd(uint32_t nowMs, uint8_t activeRings) {
-    const uint32_t cycle = turnWaveCycleMs(activeRings);
-    if (cycle == 0) {
-      return true;
-    }
-    const uint32_t phase = nowMs % cycle;
-    const uint32_t step = RuntimeConfig::get().turnRingStepMs;
-    if (phase >= (step * activeRings)) {
-      return true;
-    }
-    return phase < Config::TURN_RING_BOUNDARY_WINDOW_MS;
-  }
 }
 
 void App::begin() {
@@ -160,7 +147,7 @@ void App::tick(uint32_t nowMs) {
     _turnLastHighMs = nowMs;
   } else if (_turnHoldActive) {
     if ((uint32_t)(nowMs - _turnLastHighMs) >= RuntimeConfig::get().turnOffHoldMs) {
-      if (isTurnWaveSafeToEnd(nowMs, 3)) {
+      if (isTurnPulseSafeToEnd(nowMs)) {
         _turnHoldActive = false;
       }
     }
@@ -205,7 +192,6 @@ void App::tick(uint32_t nowMs) {
   const bool tailOnly = mode.tailEnabled && !mode.brakeEnabled && !mode.turnEnabled;
   _strip.setBrightness(tailOnly ? cfg.ledBrightnessTail : cfg.ledBrightnessMax);
   const bool turnOnly = mode.turnEnabled && !mode.brakeEnabled;
-  const uint8_t turnActiveRings = 3;
   const uint8_t tailScale = turnOnly ? 128 : 255;
 
   CRGB* leds = _strip.leds();
@@ -220,9 +206,9 @@ void App::tick(uint32_t nowMs) {
     renderBrakeSmallAndLarge(leds);
   }
 
-  // Turn layer: mid ring overwrite (with blink envelope)
+  // Turn layer: all rings pulse with configured color
   if (mode.turnEnabled) {
-    renderTurnRingsWave(leds, nowMs, turnActiveRings);
+    renderTurnPulse(leds, nowMs);
   }
 
   _strip.show();

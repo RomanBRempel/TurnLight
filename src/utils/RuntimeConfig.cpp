@@ -25,8 +25,8 @@ namespace RuntimeConfig {
 
     d.brakeBright = Config::BRAKE_BRIGHT;
 
-    d.turnRingStepMs = Config::TURN_RING_STEP_MS;
-    d.turnRingCyclePauseMs = Config::TURN_RING_CYCLE_PAUSE_MS;
+    d.turnPulseOnMs = Config::TURN_PULSE_ON_MS;
+    d.turnPulseOffMs = Config::TURN_PULSE_OFF_MS;
     d.turnRingBright = Config::TURN_RING_BRIGHT;
     d.turnOffHoldMs = Config::TURN_OFF_HOLD_MS;
 
@@ -65,8 +65,8 @@ namespace RuntimeConfig {
 
     data.brakeBright = prefs.getUChar("bb", data.brakeBright);
 
-    data.turnRingStepMs = prefs.getUShort("trsm", data.turnRingStepMs);
-    data.turnRingCyclePauseMs = prefs.getUShort("trpm", data.turnRingCyclePauseMs);
+    data.turnPulseOnMs = prefs.getUShort("tponms", data.turnPulseOnMs);
+    data.turnPulseOffMs = prefs.getUShort("tpoffms", data.turnPulseOffMs);
     data.turnRingBright = prefs.getUChar("trb", data.turnRingBright);
     data.turnOffHoldMs = prefs.getUShort("tohm", data.turnOffHoldMs);
 
@@ -100,8 +100,8 @@ namespace RuntimeConfig {
 
     prefs.putUChar("bb", data.brakeBright);
 
-    prefs.putUShort("trsm", data.turnRingStepMs);
-    prefs.putUShort("trpm", data.turnRingCyclePauseMs);
+    prefs.putUShort("tponms", data.turnPulseOnMs);
+    prefs.putUShort("tpoffms", data.turnPulseOffMs);
     prefs.putUChar("trb", data.turnRingBright);
     prefs.putUShort("tohm", data.turnOffHoldMs);
 

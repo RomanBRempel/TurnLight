@@ -26,8 +26,8 @@ namespace {
     json += "\"tailMidBright\":" + String(cfg.tailMidBright) + ",";
     json += "\"tailLargeBright\":" + String(cfg.tailLargeBright) + ",";
     json += "\"brakeBright\":" + String(cfg.brakeBright) + ",";
-    json += "\"turnRingStepMs\":" + String(cfg.turnRingStepMs) + ",";
-    json += "\"turnRingCyclePauseMs\":" + String(cfg.turnRingCyclePauseMs) + ",";
+    json += "\"turnPulseOnMs\":" + String(cfg.turnPulseOnMs) + ",";
+    json += "\"turnPulseOffMs\":" + String(cfg.turnPulseOffMs) + ",";
     json += "\"turnRingBright\":" + String(cfg.turnRingBright) + ",";
     json += "\"turnOffHoldMs\":" + String(cfg.turnOffHoldMs) + ",";
     json += "\"turnOrangeR\":" + String(cfg.turnOrangeR) + ",";
@@ -194,8 +194,8 @@ void WifiPortal::setupServer() {
 
     applyArg(_server, "brakeBright", cfg.brakeBright);
 
-    applyArg(_server, "turnRingStepMs", cfg.turnRingStepMs);
-    applyArg(_server, "turnRingCyclePauseMs", cfg.turnRingCyclePauseMs);
+    applyArg(_server, "turnPulseOnMs", cfg.turnPulseOnMs);
+    applyArg(_server, "turnPulseOffMs", cfg.turnPulseOffMs);
     applyArg(_server, "turnRingBright", cfg.turnRingBright);
     applyArg(_server, "turnOffHoldMs", cfg.turnOffHoldMs);
 
