@@ -32,7 +32,11 @@ namespace {
     json += "\"turnOffHoldMs\":" + String(cfg.turnOffHoldMs) + ",";
     json += "\"turnOrangeR\":" + String(cfg.turnOrangeR) + ",";
     json += "\"turnOrangeG\":" + String(cfg.turnOrangeG) + ",";
-    json += "\"turnOrangeB\":" + String(cfg.turnOrangeB);
+    json += "\"turnOrangeB\":" + String(cfg.turnOrangeB) + ",";
+    json += "\"turnBrakeAnimMode\":" + String(cfg.turnBrakeAnimMode) + ",";
+    json += "\"turnOnlyTailScale\":" + String(cfg.turnOnlyTailScale) + ",";
+    json += "\"turnBrakeCombinedRedBright\":" + String(cfg.turnBrakeCombinedRedBright) + ",";
+    json += "\"turnBrakeFlickerPeriodMs\":" + String(cfg.turnBrakeFlickerPeriodMs);
     json += "}";
     return json;
   }
@@ -144,7 +148,12 @@ void WifiPortal::setupServer() {
     html += "const c=await fetch('/config').then(r=>r.json());\n";
     html += "const keys=Object.keys(c);\n";
     html += "let f='';\n";
-    html += "for(const k of keys){f+=`<div>${k}: <input name='${k}' value='${c[k]}'></div>`;}\n";
+    html += "for(const k of keys){\n";
+    html += "if(k==='turnBrakeAnimMode'){\n";
+    html += "f+=`<div>${k} (0=волна, 1=стат.малый/средний+мерцание большой): `;\n";
+    html += "f+=`<select name='${k}'><option value='0'${c[k]==0?' selected':''}>0 — Волна поворота (текущий)</option><option value='1'${c[k]==1?' selected':''}>1 — Статичный+мерцание</option></select></div>`;\n";
+    html += "}else{f+=`<div>${k}: <input name='${k}' value='${c[k]}'></div>`;}\n";
+    html += "}\n";
     html += "document.getElementById('cfg').innerHTML=f;\n";
     html += "}\n";
     html += "async function saveCfg(){\n";
@@ -202,6 +211,11 @@ void WifiPortal::setupServer() {
     applyArg(_server, "turnOrangeR", cfg.turnOrangeR);
     applyArg(_server, "turnOrangeG", cfg.turnOrangeG);
     applyArg(_server, "turnOrangeB", cfg.turnOrangeB);
+
+    applyArg(_server, "turnBrakeAnimMode", cfg.turnBrakeAnimMode);
+    applyArg(_server, "turnOnlyTailScale", cfg.turnOnlyTailScale);
+    applyArg(_server, "turnBrakeCombinedRedBright", cfg.turnBrakeCombinedRedBright);
+    applyArg(_server, "turnBrakeFlickerPeriodMs", cfg.turnBrakeFlickerPeriodMs);
 
     _server.send(200, "application/json", "{\"ok\":true}");
   });

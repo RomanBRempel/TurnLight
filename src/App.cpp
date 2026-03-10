@@ -205,8 +205,9 @@ void App::tick(uint32_t nowMs) {
   const bool tailOnly = mode.tailEnabled && !mode.brakeEnabled && !mode.turnEnabled;
   _strip.setBrightness(tailOnly ? cfg.ledBrightnessTail : cfg.ledBrightnessMax);
   const bool turnOnly = mode.turnEnabled && !mode.brakeEnabled;
+  const bool turnAndBrake = mode.turnEnabled && mode.brakeEnabled;
   const uint8_t turnActiveRings = 3;
-  const uint8_t tailScale = turnOnly ? 128 : 255;
+  const uint8_t tailScale = turnOnly ? cfg.turnOnlyTailScale : 255;
 
   CRGB* leds = _strip.leds();
 
@@ -215,14 +216,26 @@ void App::tick(uint32_t nowMs) {
     renderTail(leds, tailScale);
   }
 
-  // Brake layer: small+large overwrite
+  // Brake layer
   if (mode.brakeEnabled) {
-    renderBrakeSmallAndLarge(leds);
+    if (turnAndBrake && cfg.turnBrakeAnimMode == 1) {
+      // Mode 1 combined: handled entirely in the turn section below
+    } else if (turnAndBrake) {
+      // Mode 0 combined: brake at combined red brightness, turn wave renders overtop
+      renderBrakeSmallAndLarge(leds, cfg.turnBrakeCombinedRedBright);
+    } else {
+      renderBrakeSmallAndLarge(leds);
+    }
   }
 
-  // Turn layer: mid ring overwrite (with blink envelope)
+  // Turn layer
   if (mode.turnEnabled) {
-    renderTurnRingsWave(leds, nowMs, turnActiveRings);
+    if (turnAndBrake && cfg.turnBrakeAnimMode == 1) {
+      // Mode 1: static small+mid red + smooth flicker large with turn color
+      renderTurnBrakeMode1(leds, nowMs);
+    } else {
+      renderTurnRingsWave(leds, nowMs, turnActiveRings);
+    }
   }
 
   _strip.show();

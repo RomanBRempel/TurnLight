@@ -64,3 +64,31 @@ inline void renderTurnRingsWave(CRGB* leds, uint32_t nowMs, uint8_t activeRings)
     }
   }
 }
+
+// Mode 1 combined animation: small+mid constantly at red brightness, large ring smoothly flickers with turn color.
+inline void renderTurnBrakeMode1(CRGB* leds, uint32_t nowMs) {
+  const RuntimeConfig::Data& cfg = RuntimeConfig::get();
+
+  // Small and mid rings: constant red at combined brightness
+  for (uint16_t i = 0; i < LedLayout::RING_SMALL_COUNT; i++) {
+    leds[LedLayout::RING_SMALL_START + i] = colorBrake(cfg.turnBrakeCombinedRedBright);
+  }
+  for (uint16_t i = 0; i < LedLayout::RING_MID_COUNT; i++) {
+    leds[LedLayout::RING_MID_START + i] = colorBrake(cfg.turnBrakeCombinedRedBright);
+  }
+
+  // Large ring: smooth sine breathing with turn color
+  const uint32_t period = cfg.turnBrakeFlickerPeriodMs;
+  uint8_t bright;
+  if (period == 0) {
+    bright = cfg.turnRingBright;
+  } else {
+    const uint32_t t = nowMs % period;
+    const uint8_t sinePhase = static_cast<uint8_t>((t * 255UL) / period);
+    const uint8_t breath = sin8(sinePhase);
+    bright = scale8(cfg.turnRingBright, breath);
+  }
+  for (uint16_t i = 0; i < LedLayout::RING_LARGE_COUNT; i++) {
+    leds[LedLayout::RING_LARGE_START + i] = colorTurn(bright);
+  }
+}
