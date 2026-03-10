@@ -22,8 +22,8 @@ namespace RuntimeConfig {
 
     uint8_t brakeBright;
 
-    uint16_t turnRingStepMs;
-    uint16_t turnRingCyclePauseMs;
+    uint16_t turnPulseOnMs;
+    uint16_t turnPulseOffMs;
     uint8_t turnRingBright;
     uint16_t turnOffHoldMs;
 
